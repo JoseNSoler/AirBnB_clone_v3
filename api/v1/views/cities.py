@@ -6,35 +6,8 @@ from models import storage
 from models.engine.db_storage import classes
 
 
-@app_views.route('/states/', methods=['GET', 'POST'])
-def states_methods():
-    if request.method == 'POST':
-        storage.reload()
-        jsonDicto = request.get_json()
-        if jsonDicto is None:
-            abort(400, 'Not a JSON')
-        if "name" not in jsonDicto:
-            abort(400, 'Missing name')
-        newState = classes['State'](**jsonDicto)
-        storage.new(newState)
-        storage.save()
-        storage.reload()
-        return jsonify(
-                storage.get(newState.__class__, newState.id).to_dict()), 201
-
-    else:
-        listDicto = []
-        dicto = storage.all(classes['State'])
-        for str, obj in dicto.items():
-            objDicto = {}
-            for key, value in obj.to_dict().items():
-                objDicto[key] = value
-            listDicto.append(objDicto)
-        return jsonify(listDicto)
-
-
-@app_views.route('/states/<state_id>', methods=['GET', 'PUT', 'DELETE'])
-def states_id_methods(state_id):
+@app_views.route('/states/<state_id>/cities', methods=['GET', 'POST'])
+def cities_methods(state_id):
     totalDicto = storage.all()
     copyTypeClass = {}
     status = 0
@@ -42,7 +15,54 @@ def states_id_methods(state_id):
     # Main iterator: get obj based on unique id, if not, status=0 == abort(404)
     for key, value in totalDicto.items():
         typeClass = key.split(".")
-        if typeClass[1] == str(state_id) and typeClass[0] == "State":
+        if typeClass[1] == "{}".format(state_id) and typeClass[0] == "State":
+            status = 1
+            copyTypeClass["{}".format(typeClass)] = value
+            break
+
+    if request.method == 'POST':
+        if status == 0:
+            abort(404)
+        storage.reload()
+        jsonDicto = request.get_json()
+        if jsonDicto is None:
+            abort(400, 'Not a JSON')
+        if "name" not in jsonDicto:
+            abort(400, 'Missing name')
+        jsonDicto['state_id'] = state_id
+        newCity = classes['City'](**jsonDicto)
+
+        storage.new(newCity)
+        
+        storage.save()
+        storage.reload()
+        return jsonify(
+                storage.get(newCity.__class__, newCity.id).to_dict()), 201
+
+    else:
+        if status == 0:
+            abort(404)
+        listDicto = []
+        dicto = storage.all(classes['City'])
+        for str, obj in dicto.items():
+            if hasattr(obj, 'state_id') and getattr(obj, 'state_id') == state_id:
+                objDicto = {}
+                for key, value in obj.to_dict().items():
+                    objDicto[key] = value
+                listDicto.append(objDicto)
+        return jsonify(listDicto)
+
+
+@app_views.route('/cities/<city_id>', methods=['GET', 'PUT', 'DELETE'])
+def cities_id_methods(city_id):
+    totalDicto = storage.all()
+    copyTypeClass = {}
+    status = 0
+
+    # Main iterator: get obj based on unique id, if not, status=0 == abort(404)
+    for key, value in totalDicto.items():
+        typeClass = key.split(".")
+        if typeClass[1] == str(city_id) and typeClass[0] == "City":
             status = 1
             copyTypeClass[str(typeClass)] = value
             break
@@ -64,7 +84,7 @@ def states_id_methods(state_id):
                 storage.save()
                 storage.reload()
                 return jsonify(value.to_dict()), 200
-            
+
 
     elif request.method == 'DELETE':
         try:
