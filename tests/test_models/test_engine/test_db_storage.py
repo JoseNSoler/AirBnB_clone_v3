@@ -67,9 +67,27 @@ test_db_storage.py'])
             self.assertTrue(len(func[1].__doc__) >= 1,
                             "{:s} method needs a docstring".format(func[0]))
 
-
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""
+    @classmethod
+    def setUpClass(cls):
+        """create a session"""
+        # close previous connexion to same database
+        DBStorage.__session.close()
+        cls.store = DBStorage()
+        test_args = {'updated_at': datetime(2021, 12, 12, 00, 31, 53, 331001),
+                     'id': "0234",
+                     'created_at': datetime(2021, 12, 12, 00, 31, 53, 331900),
+                     'name': 'wifi'}
+        cls.model = Amenity(**test_args)
+        cls.store.reload()
+        cls.test_len = 0
+
+    @classmethod
+    def tearDownClass(cls):
+        DBStorage.__session.close()
+        DBStorage.reload()
+
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_all_returns_dict(self):
         """Test that all returns a dictionaty"""
@@ -86,3 +104,10 @@ class TestFileStorage(unittest.TestCase):
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_save(self):
         """Test that save properly saves objects to file.json"""
+    
+    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
+    def test_get_pace(self):
+        """... checks if get() function returns properly"""
+        duplicate = self.store.get('Amenity', self.model.id)
+        expected = self.model.id
+        self.assertEqual(expected, duplicate.ids)
