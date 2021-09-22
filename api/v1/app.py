@@ -4,6 +4,7 @@
 from os import getenv
 from flask import Flask
 from flask.blueprints import Blueprint
+from flask import jsonify, request
 
 
 app = Flask(__name__)
@@ -17,9 +18,12 @@ app.config.update(
     JSONIFY_PRETTYPRINT_REGULAR=True
 )
 
+@app.errorhandler(404)
+def not_found(e):
+    return (jsonify({"error": "Not found"})), 404
 
 @app.teardown_appcontext
-def closeStorage(exception):
+def close_storage(exception):
     # Return close session on
     storage.close()
 

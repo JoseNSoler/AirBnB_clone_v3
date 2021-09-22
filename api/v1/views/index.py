@@ -10,10 +10,8 @@ from models.engine.db_storage import classes
 def status():
     return (jsonify({"status" : "OK"}))
 
-
 @app_views.route('/stats')
 def stats_db():
-    print(storage.all())
     finalDicto = {}
     for key, value in classes.items():
         finalDicto[key] = storage.count(value)
