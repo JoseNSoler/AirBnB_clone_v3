@@ -13,6 +13,10 @@ from api.v1.views import app_views
 
 app.register_blueprint(app_views)
 
+app.config.update(
+    JSONIFY_PRETTYPRINT_REGULAR=True
+)
+
 
 @app.teardown_appcontext
 def closeStorage(exception):
